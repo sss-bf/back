@@ -1,30 +1,33 @@
 package com.example.sss.test;
 
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/test")  // "/test" 경로로 설정
+@RequestMapping("/test")
 public class TestController {
 
     @PostMapping
     public ResponseEntity<?> testUpload(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("text") String text) {
+            @RequestParam("text1") String text1,
+            @RequestParam("text2") String text2) {
 
         try {
-            // 파일과 텍스트 데이터 처리
-            System.out.println("Received file: " + file.getOriginalFilename());
-            System.out.println("Received text: " + text);
 
-            // 정상 처리 후 응답 반환
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body("success");
+            // 응답 JSON 생성
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("receivedText1", text1);
+            response.put("receivedText2", text2);
+
+            // JSON 형태로 응답 반환
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("fail");
+                    .body(Map.of("status", "fail"));
         }
     }
 }
