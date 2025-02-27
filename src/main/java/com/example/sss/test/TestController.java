@@ -19,20 +19,20 @@ public class TestController {
 
     @PostMapping
     public ResponseEntity<?> testUpload(
-            @RequestParam("text1") String text1,
-            @RequestParam("text2") String text2) {
+            @RequestParam("url") String url,
+            @RequestParam("intend") String intend) {
 
         // 임시로 받은 데이터 로그로 출력
-        System.out.println("Received text1: " + text1);
-        System.out.println("Received text2: " + text2);
+        System.out.println("Received url: " + url);
+        System.out.println("Received intend: " + intend);
 
         try {
             // WebClient를 사용하여 FastAPI 서버에 POST 요청 보내기
             String aiResponse = webClient.post()
                     .uri(uriBuilder -> uriBuilder
                             .path("/api/v1/guide")  // FastAPI 엔드포인트
-                            .queryParam("user_request", text1)  // 쿼리 파라미터로 전달
-                            .queryParam("image_url", text2)  // 쿼리 파라미터로 전달
+                            .queryParam("user_request", intend)  // 쿼리 파라미터로 전달
+                            .queryParam("image_url", url)  // 쿼리 파라미터로 전달
                             .build())
                     .retrieve()
                     .bodyToMono(String.class)  // 응답을 문자열로 변환
