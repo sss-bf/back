@@ -64,8 +64,8 @@ jobs:
             --filters "Name=tag:Name,Values=SpringBoot-Instance" \
                       "Name=instance-state-name,Values=running" \
             --query "Reservations[*].Instances[*].InstanceId" \
-            --output text)
-          
+            --output text | tr '\n' ' ')
+
           echo "INSTANCE_IDS=$INSTANCE_IDS" >> $GITHUB_ENV
           echo "Found running EC2 instances: $INSTANCE_IDS"
 
@@ -73,7 +73,7 @@ jobs:
       - name: Deploy to All EC2 Instances
         run: |
           ECR_REPO=${{ secrets.ECR_REPOSITORY }}
-          for INSTANCE_ID in $INSTANCE_IDS; do
+          for INSTANCE_ID in $(echo $INSTANCE_IDS | tr '\t' ' '); do
             echo "Deploying to EC2 instance: $INSTANCE_ID"
             ssh -o StrictHostKeyChecking=no ubuntu@$INSTANCE_ID "bash -s" <<EOF
               sudo docker stop springboot || true
@@ -83,5 +83,6 @@ jobs:
               sudo docker run -d --name springboot -p 8080:8080 $ECR_REPO:latest
             EOF
           done
+      
       
 
