@@ -65,7 +65,6 @@ jobs:
                       "Name=instance-state-name,Values=running" \
             --query "Reservations[*].Instances[*].InstanceId" \
             --output text | tr '\n' ' ')
-
           echo "INSTANCE_IDS=$INSTANCE_IDS" >> $GITHUB_ENV
           echo "Found running EC2 instances: $INSTANCE_IDS"
 
@@ -76,13 +75,10 @@ jobs:
           for INSTANCE_ID in $(echo $INSTANCE_IDS | tr '\t' ' '); do
             echo "Deploying to EC2 instance: $INSTANCE_ID"
             ssh -o StrictHostKeyChecking=no ubuntu@$INSTANCE_ID "bash -s" <<EOF
-              sudo docker stop springboot || true
-              sudo docker rm springboot || true
-              sudo aws ecr get-login-password --region $AWS_REGION | sudo docker login --username AWS --password-stdin $(echo $ECR_REPO | cut -d'/' -f1)
-              sudo docker pull $ECR_REPO:latest
-              sudo docker run -d --name springboot -p 8080:8080 $ECR_REPO:latest
-            EOF
-          done
-      
-      
-
+  sudo docker stop springboot || true
+  sudo docker rm springboot || true
+  sudo aws ecr get-login-password --region $AWS_REGION | sudo docker login --username AWS --password-stdin $(echo $ECR_REPO | cut -d'/' -f1)
+  sudo docker pull $ECR_REPO:latest
+  sudo docker run -d --name springboot -p 8080:8080 $ECR_REPO:latest
+  EOF
+  done
