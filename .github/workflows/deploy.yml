@@ -1,0 +1,86 @@
+name: Deploy Spring Boot to AWS ECR and EC2
+
+on:
+  push:
+    branches:
+      - jason_test  # jason_test 브랜치에 푸시될 때 실행
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ 코드 체크아웃
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ JDK 21 설치 (Spring Boot 빌드용)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # 3️⃣ Gradle 실행 권한 부여
+      - name: Grant execute permission for Gradlew
+        run: chmod +x gradlew
+
+      # 4️⃣ Spring Boot 애플리케이션 빌드
+      - name: Build Spring Boot application
+        run: ./gradlew clean build -x test
+
+      # 5️⃣ AWS 로그인 설정
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 6️⃣ Docker 로그인 (ECR)
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY }}
+
+      # 7️⃣ Docker 이미지 빌드 & 태깅
+      - name: Build Docker Image
+        run: |
+          docker buildx build --platform linux/amd64 -t ${{ secrets.ECR_REPOSITORY }}:latest .
+
+      # 8️⃣ ECR에 Docker 이미지 Push
+      - name: Push Docker Image to Amazon ECR
+        run: |
+          docker push ${{ secrets.ECR_REPOSITORY }}:latest
+
+      # 9️⃣ 실행 중인 모든 EC2 인스턴스 조회
+      - name: Get All Running EC2 Instances
+        id: get_instances
+        run: |
+          INSTANCE_IDS=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=SpringBoot-Instance" \
+                      "Name=instance-state-name,Values=running" \
+            --query "Reservations[*].Instances[*].InstanceId" \
+            --output text)
+          
+          echo "INSTANCE_IDS=$INSTANCE_IDS" >> $GITHUB_ENV
+          echo "Found running EC2 instances: $INSTANCE_IDS"
+
+      # 🔟 각 인스턴스에서 컨테이너 배포 실행
+      - name: Deploy to All EC2 Instances
+        run: |
+          ECR_REPO=${{ secrets.ECR_REPOSITORY }}
+          for INSTANCE_ID in $INSTANCE_IDS; do
+            echo "Deploying to EC2 instance: $INSTANCE_ID"
+            ssh -o StrictHostKeyChecking=no ubuntu@$INSTANCE_ID << 'EOF'
+              sudo docker stop springboot || true
+              sudo docker rm springboot || true
+              sudo aws ecr get-login-password --region $AWS_REGION | sudo docker login --username AWS --password-stdin $(echo $ECR_REPO | cut -d'/' -f1)
+              sudo docker pull $ECR_REPO:latest
+              sudo docker run -d --name springboot -p 8080:8080 $ECR_REPO:latest
+            EOF
+          done
+
