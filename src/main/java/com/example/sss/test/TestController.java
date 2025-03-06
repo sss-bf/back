@@ -12,6 +12,7 @@ public class TestController {
     // Github Action에서 사용하는 IP대역이 있어서 수정 후 다시
     // #1. Bastion에 known_host 등록
     // #11. docker rm stop 되는지 확인
+    // #14. ecr repo 로그인 잘 되는지 확인
     @GetMapping
     public String test() {
         return "CI/CD Success!!!(3)";
