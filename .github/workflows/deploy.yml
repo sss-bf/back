@@ -1,4 +1,4 @@
-name: Deploy Spring Boot to AWS ECR and EC2
+name: Deploy Spring Boot to AWS ECR and Private EC2 via Bastion
 
 on:
   push:
@@ -56,30 +56,24 @@ jobs:
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:latest
 
-      # 9️⃣ 실행 중인 모든 EC2 인스턴스 조회
-      - name: Get All Running EC2 Instances
-        id: get_instances
-        run: |
-          INSTANCE_IDS=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name,Values=SpringBoot-Instance" \
-                      "Name=instance-state-name,Values=running" \
-            --query "Reservations[*].Instances[*].InstanceId" \
-            --output text | tr '\n' ' ')
-          echo "INSTANCE_IDS=$INSTANCE_IDS" >> $GITHUB_ENV
-          echo "Found running EC2 instances: $INSTANCE_IDS"
+      # 9️⃣ SSH 에이전트 설정 (Bastion 및 Private EC2 접근용)
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # 🔟 각 인스턴스에서 컨테이너 배포 실행
-      - name: Deploy to All EC2 Instances
+      # 🔟 Bastion 서버를 통해 Private EC2 인스턴스에 배포 실행
+      - name: Deploy to Private EC2 via Bastion
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REPO: ${{ secrets.ECR_REPOSITORY }}
         run: |
-          ECR_REPO=${{ secrets.ECR_REPOSITORY }}
-          for INSTANCE_ID in $(echo $INSTANCE_IDS | tr '\t' ' '); do
-            echo "Deploying to EC2 instance: $INSTANCE_ID"
-            ssh -o StrictHostKeyChecking=no ubuntu@$INSTANCE_ID "bash -s" <<-EOF
-          sudo docker stop springboot || true
-          sudo docker rm springboot || true
-          sudo aws ecr get-login-password --region $AWS_REGION | sudo docker login --username AWS --password-stdin \$(echo \$ECR_REPO | cut -d'/' -f1)
-          sudo docker pull \$ECR_REPO:latest
-          sudo docker run -d --name springboot -p 8080:8080 \$ECR_REPO:latest
+          ssh -o StrictHostKeyChecking=no -J ec2-user@${{ secrets.BASTION_HOST }} ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} <<-'EOF'
+            echo "Deploying Docker container on private EC2 instance..."
+            sudo docker stop springboot || true
+            sudo docker rm springboot || true
+            sudo aws ecr get-login-password --region $AWS_REGION | \
+              sudo docker login --username AWS --password-stdin $(echo $ECR_REPO | cut -d'/' -f1)
+            sudo docker pull $ECR_REPO:latest
+            sudo docker run -d --name springboot -p 8080:8080 $ECR_REPO:latest
           EOF
-          done
-

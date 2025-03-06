@@ -10,7 +10,7 @@ public class TestController {
 
     @GetMapping
     public String test() {
-        return "성공했습니다!";
+        return "CI/CD Success!";
     }
 }
 
