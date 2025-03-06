@@ -15,12 +15,12 @@ jobs:
     steps:
       # 1️⃣ 코드 체크아웃 (실행 안됨)
       - name: Checkout repository
-        if: true
+        if: false
         uses: actions/checkout@v4
 
       # 2️⃣ JDK 21 설치 (실행 안됨)
       - name: Set up JDK 21
-        if: true
+        if: false
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
@@ -28,17 +28,17 @@ jobs:
 
       # 3️⃣ Gradle 실행 권한 부여 (실행 안됨)
       - name: Grant execute permission for Gradlew
-        if: true
+        if: false
         run: chmod +x gradlew
 
       # 4️⃣ Spring Boot 애플리케이션 빌드 (실행 안됨)
       - name: Build Spring Boot application
-        if: true
+        if: false
         run: ./gradlew clean build -x test
 
       # 5️⃣ AWS 로그인 설정 (실행 안됨)
       - name: Configure AWS credentials
-        if: true
+        if: false
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -47,20 +47,20 @@ jobs:
 
       # 6️⃣ Docker 로그인 (ECR) (실행 안됨)
       - name: Login to Amazon ECR
-        if: true
+        if: false
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
           docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY }}
 
       # 7️⃣ Docker 이미지 빌드 & 태깅 (실행 안됨)
       - name: Build Docker Image
-        if: true
+        if: false
         run: |
           docker buildx build --platform linux/amd64 -t ${{ secrets.ECR_REPOSITORY }}:spring-boot-2 .
 
       # 8️⃣ ECR에 Docker 이미지 Push (실행 안됨)
       - name: Push Docker Image to Amazon ECR
-        if: true
+        if: false
         run: |
           docker push ${{ secrets.ECR_REPOSITORY }}:spring-boot-2
 
@@ -86,12 +86,15 @@ jobs:
             -o StrictHostKeyChecking=no \
             -J ec2-user@${{ secrets.BASTION_HOST }} ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} <<EOF
               echo "Deploying Docker container on private EC2 instance..."
-              sudo docker stop springboot || true
-              sudo docker rm springboot || true
+              echo "AWS_REGION is: $AWS_REGION"
+              echo "ECR_REPO is: $ECR_REPO"
+              # sudo docker stop springboot || true
+              # sudo docker rm springboot || true
               sudo aws ecr get-login-password --region $AWS_REGION | \
                 sudo docker login --username AWS --password-stdin \$(echo \$ECR_REPO | cut -d'/' -f1)
               sudo docker pull \$ECR_REPO:spring-boot-2
               sudo docker run -d --name springboot -p 8080:8080 \$ECR_REPO:spring-boot-2
           EOF
+      
       
           
