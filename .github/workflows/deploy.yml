@@ -68,8 +68,8 @@ jobs:
       - name: Add SSH Key to known_hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts
-          ssh-keyscan -H ${{ secrets.PRIVATE_INSTANCE_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts || true
+          ssh-keyscan -H ${{ secrets.PRIVATE_INSTANCE_IP }} >> ~/.ssh/known_hosts || true
 
       # 9️⃣ SSH 에이전트 설정 (Bastion 및 Private EC2 접근용)
       - name: Setup SSH Agent
