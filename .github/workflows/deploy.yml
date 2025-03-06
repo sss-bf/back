@@ -77,7 +77,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # 🔟 Bastion 서버를 통해 Private EC2 인스턴스에 배포 실행 (모든 글로벌 known_hosts 비활성화)
       - name: Deploy to Private EC2 via Bastion
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -90,7 +89,8 @@ jobs:
               sudo docker stop springboot || true
               sudo docker rm springboot || true
               sudo aws ecr get-login-password --region $AWS_REGION | \
-               sudo docker login --username AWS --password-stdin $(echo $ECR_REPO | cut -d'/' -f1)
+                sudo docker login --username AWS --password-stdin $(echo $ECR_REPO | cut -d'/' -f1)
               sudo docker pull $ECR_REPO:spring-boot-2
               sudo docker run -d --name springboot -p 8080:8080 $ECR_REPO:spring-boot-2
           EOF
+          
