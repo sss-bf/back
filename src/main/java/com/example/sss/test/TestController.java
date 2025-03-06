@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/test")
 public class TestController {
 
+    // 보안그룹 내 아이피로 변경 후 다시
     @GetMapping
     public String test() {
         return "CI/CD Success!";
