@@ -49,12 +49,12 @@ jobs:
       # 7️⃣ Docker 이미지 빌드 & 태깅
       - name: Build Docker Image
         run: |
-          docker buildx build --platform linux/amd64 -t ${{ secrets.ECR_REPOSITORY }}:latest .
+          docker buildx build --platform linux/amd64 -t ${{ secrets.ECR_REPOSITORY }}:spring-boot-2 .
 
       # 8️⃣ ECR에 Docker 이미지 Push
       - name: Push Docker Image to Amazon ECR
         run: |
-          docker push ${{ secrets.ECR_REPOSITORY }}:latest
+          docker push ${{ secrets.ECR_REPOSITORY }}:spring-boot-2
 
       # 9️⃣ SSH 에이전트 설정 (Bastion 및 Private EC2 접근용)
       - name: Setup SSH Agent
@@ -74,6 +74,6 @@ jobs:
             sudo docker rm springboot || true
             sudo aws ecr get-login-password --region $AWS_REGION | \
               sudo docker login --username AWS --password-stdin $(echo $ECR_REPO | cut -d'/' -f1)
-            sudo docker pull $ECR_REPO:latest
-            sudo docker run -d --name springboot -p 8080:8080 $ECR_REPO:latest
+            sudo docker pull $ECR_REPO:spring-boot-2
+            sudo docker run -d --name springboot -p 8080:8080 $ECR_REPO:spring-boot-2
           EOF
