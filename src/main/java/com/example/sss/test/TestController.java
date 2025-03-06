@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     // 보안그룹 내 아이피로 변경 후 다시
+    // Github Action에서 사용하는 IP대역이 있어서 수정 후 다시
     @GetMapping
     public String test() {
         return "CI/CD Success!";
