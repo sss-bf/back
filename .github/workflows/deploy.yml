@@ -71,7 +71,7 @@ jobs:
           ssh-keyscan -H ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts || true
           ssh-keyscan -H ${{ secrets.PRIVATE_INSTANCE_IP }} >> ~/.ssh/known_hosts || true
 
-      # 9️⃣ SSH 에이전트 설정 (Bastion 및 Private EC2 접근용)
+      # 9️⃣ SSH 에이전트 설정 (Bastion 및 Private EC2 접근용)1
       - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.5.3
         with:
