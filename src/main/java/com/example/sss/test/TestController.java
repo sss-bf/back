@@ -15,7 +15,7 @@ public class TestController {
     // #14. ecr repo 로그인 잘 되는지 확인
     @GetMapping
     public String test() {
-        return "CI/CD Success!!!(3)";
+        return "환경변수 설정 없이 CI/CD";
     }
 }
 

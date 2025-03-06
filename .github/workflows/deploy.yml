@@ -88,8 +88,8 @@ jobs:
               echo "Deploying Docker container on private EC2 instance..."
               echo "AWS_REGION is: $AWS_REGION"
               echo "ECR_REPO is: $ECR_REPO"
-              # sudo docker stop springboot || true
-              # sudo docker rm springboot || true
+              sudo docker stop springboot || true
+              sudo docker rm springboot || true
               sudo -E aws ecr get-login-password --region ap-northeast-2 | \
                 sudo -E docker login --username AWS --password-stdin 967164747290.dkr.ecr.ap-northeast-2.amazonaws.com
               sudo docker pull 967164747290.dkr.ecr.ap-northeast-2.amazonaws.com/practice:spring-boot-2
