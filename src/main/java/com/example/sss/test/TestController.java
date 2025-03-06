@@ -14,7 +14,7 @@ public class TestController {
     // #11. docker rm stop 되는지 확인
     @GetMapping
     public String test() {
-        return "CI/CD Success!";
+        return "CI/CD Success!!!(3)";
     }
 }
 
