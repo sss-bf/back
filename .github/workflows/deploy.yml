@@ -84,13 +84,14 @@ jobs:
         run: |
           ssh -A \
             -o StrictHostKeyChecking=no \
-            -J ec2-user@${{ secrets.BASTION_HOST }} ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} <<-'EOF'
+            -J ec2-user@${{ secrets.BASTION_HOST }} ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} <<EOF
               echo "Deploying Docker container on private EC2 instance..."
               sudo docker stop springboot || true
               sudo docker rm springboot || true
               sudo aws ecr get-login-password --region $AWS_REGION | \
-                sudo docker login --username AWS --password-stdin $(echo $ECR_REPO | cut -d'/' -f1)
-              sudo docker pull $ECR_REPO:spring-boot-2
-              sudo docker run -d --name springboot -p 8080:8080 $ECR_REPO:spring-boot-2
+                sudo docker login --username AWS --password-stdin \$(echo \$ECR_REPO | cut -d'/' -f1)
+              sudo docker pull \$ECR_REPO:spring-boot-2
+              sudo docker run -d --name springboot -p 8080:8080 \$ECR_REPO:spring-boot-2
           EOF
+      
           
