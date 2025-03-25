@@ -86,6 +86,5 @@
     },
     "registeredAt": "2025-03-25T03:51:19.410Z",
     "registeredBy": "arn:aws:iam::967164747290:user/sungjun",
-    "enableFaultInjection": false,
     "tags": []
 }
